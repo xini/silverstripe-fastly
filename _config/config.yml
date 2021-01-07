@@ -1,0 +1,32 @@
+---
+Name: fastly
+after:
+After:
+  - 'framework/*'
+  - 'cms/*'
+---
+
+HTTP:
+  vary: "Accept-Encoding, X-Forwarded-Protocol"
+
+Member:
+  login_marker_cookie: sslogin
+
+SiteTree:
+  extensions:
+    - FastlySiteTreeExtension
+ContentController:
+  extensions:
+    - FastlyContentControllerExtension
+File:
+  extensions:
+    - FastlyFileExtension
+    
+---
+Only:
+  classexists: 'DMSDocument'
+---
+DMSDocument:
+  extensions:
+    - FastlyDMSDocumentExtension
+    

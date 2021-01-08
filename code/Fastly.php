@@ -44,8 +44,12 @@ class Fastly extends SS_Object implements Flushable
     {
         $image = Image::get()->byID($imageID);
         if ($image && $image->exists()) {
-            // we can't determine the image variant in SS3, so we'll just flush the image itself
-            return static::performFlush($image->getFilename());
+            $success = true;
+            // flush the file path
+            $success = $success &&  static::performFlush($image->getFilename());
+            // flush the file name as surrogate key, see readme
+            $success = $success &&  static::performFlush(null, array($image->Name));
+            return $success;
         }
         return false;
     }

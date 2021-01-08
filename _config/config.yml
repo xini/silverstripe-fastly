@@ -29,4 +29,6 @@ Only:
 DMSDocument:
   extensions:
     - FastlyDMSDocumentExtension
-    
+DMSDocument_Controller:
+  extensions:
+    - FastlyDMSDocumentControllerExtension

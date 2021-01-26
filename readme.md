@@ -60,7 +60,9 @@ For Apache, add the following snippet to your `.htaccess` file to add the surrog
 		<FilesMatch "\.(?i:html|htm|xhtml|js|css|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|svg|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|xml|pdf|gpx|kml)$">
 			SetEnvIfNoCase Request_URI "([^\/]*$)" FASTLY_FILE_NAME=$1
 			Header set Surrogate-Key %{FASTLY_FILE_NAME}e
+			Header set Vary Accept-Encoding
 		</FilesMatch>
+		Header set Vary "Accept-Encoding, X-Forwarded-Proto" "expr=%{CONTENT_TYPE} =~ m#text\/html#"
 	</ifModule>
 ### FASTLY END ###
 ```

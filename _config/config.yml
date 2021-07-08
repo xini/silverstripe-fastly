@@ -29,7 +29,7 @@ SilverStripe\Security\Member:
 SilverStripe\CMS\Model\SiteTree:
   extensions:
     - Innoweb\Fastly\Extensions\SiteTreeExtension
-ContentController:
+SilverStripe\CMS\Controllers\ContentController:
   extensions:
     - Innoweb\Fastly\Extensions\ContentControllerExtension
 SilverStripe\Assets\File:

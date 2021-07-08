@@ -1,6 +1,12 @@
 <?php
 
-class FastlyDMSDocumentControllerExtension extends Extension
+namespace Innoweb\Fastly\Extensions;
+
+use Innoweb\Fastly\Fastly;
+use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
+use SilverStripe\Core\Extension;
+
+class DMSDocumentControllerExtension extends Extension
 {
     public function onBeforeInit()
     {
@@ -13,8 +19,8 @@ class FastlyDMSDocumentControllerExtension extends Extension
 
     public function updateCacheControl()
     {
-        HTTPCacheControl::singleton()->publicCache();
-        HTTPCacheControl::singleton()->setMaxAge(2592000); // 1 month
+        HTTPCacheControlMiddleware::singleton()->publicCache();
+        HTTPCacheControlMiddleware::singleton()->setMaxAge(2592000); // 1 Month
     }
 
     public function updateVaryHeader()

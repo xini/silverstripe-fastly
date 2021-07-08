@@ -1,0 +1,7 @@
+mappings:
+  Fastly: Innoweb\Fastly\Fastly
+  FastlySiteTreeExtension: Innoweb\Fastly\Extensions\SiteTreeExtension
+  FastlyFileExtension: Innoweb\Fastly\Extensions\FileExtension
+  FastlyContentControllerExtension: Innoweb\Fastly\Extensions\ContentControllerExtension
+  FastlyDMSDocumentControllerExtension: Innoweb\Fastly\Extensions\DMSDocumentControllerExtension
+  FastlyDMSDocumentExtension: Innoweb\Fastly\Extensions\DMSFileExtension

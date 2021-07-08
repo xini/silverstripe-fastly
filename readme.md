@@ -9,7 +9,7 @@ Adds [Fastly CDN](https://www.fastly.com/) integration to a Silverstripe Site.
 
 ## Requirements
 
-* Silverstripe CMS ^3.7
+* Silverstripe CMS ^4.4
 * Guzzle 6
 
 ## Installation
@@ -48,9 +48,9 @@ Additionally, the following configuration options are available on the `Fastly` 
 
 #### Image surrogate keys
 
-Because in Silverstripe 3 we have no way of getting all image variants, we need to mark all images with a Surrogate Key in order to purge them.
+Because in Silverstripe 4 we still have no way of getting all image variants (see [https://github.com/silverstripe/silverstripe-assets/issues/109](https://github.com/silverstripe/silverstripe-assets/issues/109)), we need to mark all images  and image variants with a Surrogate Key in order to purge them.
 
-Because the filename of all image variants in SS3 end with the original filename, e.g. `/assets/Uploads/_resampled/[Modification]/yourimage.jpg`, we can extract the file name without path and add it as a surrogate key. The module then purges the original URL of the file as well as the Surrogate Key to clear the original image as well as all variants. (This might purge other images if there are multiple images with the same name in different folders, but I think we can live with that.)
+Because the filename of all image variants in SS 4.4+ have the variant hash to the original filename, e.g. `my-file__FitWzYwLDYwXQ.jpg`, we can extract the file name without hash and add it as a surrogate key header. The module then purges the original URL of the file as well as the Surrogate Key to clear the original image as well as all variants. (This might purge other images if there are multiple images with the same name in different folders, but I think we can live with that.)
 
 For Apache, add the following snippet to your `.htaccess` file to add the surrogate key:
 
@@ -58,11 +58,10 @@ For Apache, add the following snippet to your `.htaccess` file to add the surrog
 ### FASTLY START ###
 	<ifModule mod_headers.c>
 		<FilesMatch "\.(?i:html|htm|xhtml|js|css|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|svg|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|xml|pdf|gpx|kml)$">
-			SetEnvIfNoCase Request_URI "([^\/]*$)" FASTLY_FILE_NAME=$1
+			SetEnvIfNoCase Request_URI "([^\/]*)__[^\.]*(\.[A-Za-z]*)|([^\/]*)(\.[A-Za-z]*)$" FASTLY_FILE_NAME=$1$3$2$4
 			Header set Surrogate-Key %{FASTLY_FILE_NAME}e
 			Header set Vary Accept-Encoding
 		</FilesMatch>
-		Header set Vary "Accept-Encoding, X-Forwarded-Proto" "expr=%{CONTENT_TYPE} =~ m#text\/html#"
 	</ifModule>
 ### FASTLY END ###
 ```
@@ -94,7 +93,6 @@ condition: admin or logged in
 name: pass if logged in
 action: pass
 X-Forwarded-For: Append
-
 ```
 
 #### Headers
@@ -106,7 +104,6 @@ type: Cache
 action: set
 destination: stale_while_revalidate
 source: 86400s
-
 ```
 
 #### VCL snippets

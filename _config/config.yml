@@ -1,34 +1,52 @@
 ---
-Name: fastly
-after:
+Name: fastly-httpconfig
 After:
-  - 'framework/*'
-  - 'cms/*'
+  - 'requestprocessors'
 ---
-
-HTTP:
-  vary: "Accept-Encoding, X-Forwarded-Protocol"
-
-Member:
-  login_marker_cookie: sslogin
-
-SiteTree:
-  extensions:
-    - FastlySiteTreeExtension
-ContentController:
-  extensions:
-    - FastlyContentControllerExtension
-File:
-  extensions:
-    - FastlyFileExtension
+SilverStripe\Control\Middleware\HTTPCacheControlMiddleware:
+  defaultVary:
+    Accept-Encoding: true
+    X-Forwarded-Proto: true
+    X-Forwarded-Protocol: false
     
 ---
+Name: fastly-httpconfig-dev
+After: '#httpconfig-dev'
+Only:
+  environment: dev
+---
+SilverStripe\Control\Middleware\HTTPCacheControlMiddleware:
+  defaultState: 'enabled'
+  defaultForcingLevel: 0
+
+---
+Name: fastly
+---
+
+SilverStripe\Security\Member:
+  login_marker_cookie: sslogin
+
+SilverStripe\CMS\Model\SiteTree:
+  extensions:
+    - Innoweb\Fastly\Extensions\SiteTreeExtension
+ContentController:
+  extensions:
+    - Innoweb\Fastly\Extensions\ContentControllerExtension
+SilverStripe\Assets\File:
+  extensions:
+    - Innoweb\Fastly\Extensions\FileExtension
+    
+---
+Name: fastly-dms
 Only:
   classexists: 'DMSDocument'
 ---
-DMSDocument:
+SilverStripe\Assets\File:
   extensions:
-    - FastlyDMSDocumentExtension
-DMSDocument_Controller:
+    - Innoweb\Fastly\Extensions\DMSFileExtension
+Innoweb\DMS\Controller\DMSDocumentController:
   extensions:
-    - FastlyDMSDocumentControllerExtension
+    - Innoweb\Fastly\Extensions\DMSDocumentControllerExtension
+Innoweb\DMS\Controller\LegacyDMSDocumentController:
+  extensions:
+    - Innoweb\Fastly\Extensions\DMSDocumentControllerExtension

@@ -1,9 +1,23 @@
 <?php
 
-use GuzzleHttp\Client as GuzzleClient;
+namespace Innoweb\Fastly;
 
-class Fastly extends SS_Object implements Flushable
+use GuzzleHttp\Client as GuzzleClient;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Image;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Flushable;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
+
+class Fastly implements Flushable
 {
+    use Configurable;
+    use Injectable;
+
     const SITETREE_STRATEGY_SINGLE = 'single';
     const SITETREE_STRATEGY_PARENTS = 'parents';
     const SITETREE_STRATEGY_ALL = 'all';
@@ -29,7 +43,7 @@ class Fastly extends SS_Object implements Flushable
      */
     public static function flush()
     {
-        if (Config::inst()->get('Fastly', 'flush_on_dev_build')) {
+        if (Config::inst()->get(self::class, 'flush_on_dev_build')) {
             return static::flushAll();
         }
         return;
@@ -46,9 +60,9 @@ class Fastly extends SS_Object implements Flushable
         if ($image && $image->exists()) {
             $success = true;
             // flush the file path
-            $success = $success &&  static::performFlush($image->getFilename());
+            $success = $success &&  static::performFlush($image->getURL());
             // flush the file name as surrogate key, see readme
-            $success = $success &&  static::performFlush(null, array($image->Name));
+            $success = $success &&  static::performFlush(null, [$image->Name]);
             return $success;
         }
         return false;
@@ -58,21 +72,21 @@ class Fastly extends SS_Object implements Flushable
     {
         $file = File::get()->byID($fileID);
         if ($file && $file->exists()) {
-            return static::performFlush($file->getFilename());
+            return static::performFlush($file->getURL());
         }
         return false;
     }
 
     public static function flushSiteTree($sitetreeID, $smartStrategy = null)
     {
-        $surrogateKeys = array();
-        $urls = array();
+        $surrogateKeys = [];
+        $urls = [];
 
         // load page and determine flush strategy
         $sitetree = SiteTree::get()->byID($sitetreeID);
         if ($sitetree && $sitetree->exists()) {
             // get strategy config
-            $strategy = Config::inst()->get('Fastly', 'sitetree_flush_strategy');
+            $strategy = Config::inst()->get(self::class, 'sitetree_flush_strategy');
             // set smart strategy if set
             if ($strategy == Fastly::SITETREE_STRATEGY_SMART && $smartStrategy) {
                 $strategy = $smartStrategy;
@@ -100,7 +114,7 @@ class Fastly extends SS_Object implements Flushable
         }
 
         // load pages that are always flushed
-        $classes = Config::inst()->get('Fastly', 'always_include_in_sitetree_flush');
+        $classes = Config::inst()->get(self::class, 'always_include_in_sitetree_flush');
         if ($classes && count($classes) > 0) {
             foreach ($classes as $class) {
                 if (class_exists($class) && is_subclass_of($class, 'DataObject')) {
@@ -130,14 +144,15 @@ class Fastly extends SS_Object implements Flushable
         return $success;
     }
 
-    public static function flushURL($url) {
+    public static function flushURL($url)
+    {
         if ($url) {
             return static::performFlush($url);
         }
         return false;
     }
 
-    protected static function performFlush($url = null, $surrogateKeys = array())
+    protected static function performFlush($url = null, $surrogateKeys = [])
     {
         if (!static::checkConfig()) {
             return false;
@@ -152,7 +167,7 @@ class Fastly extends SS_Object implements Flushable
         $options = [
             'verify' => Config::inst()->get(self::class, 'verify_ssl'),
             'headers' => [
-                'Fastly-Key' => Config::inst()->get('Fastly', 'api_token'),
+                'Fastly-Key' => Config::inst()->get(self::class, 'api_token'),
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ],
@@ -163,9 +178,9 @@ class Fastly extends SS_Object implements Flushable
         $fastlyMethod = 'purge_all';
         $httpMethod = 'POST';
         $requestURL = Controller::join_links(
-            Config::inst()->get('Fastly', 'api_url'),
+            Config::inst()->get(self::class, 'api_url'),
             'service',
-            Config::inst()->get('Fastly', 'service_id'),
+            Config::inst()->get(self::class, 'service_id'),
             $fastlyMethod
         );
 
@@ -178,7 +193,7 @@ class Fastly extends SS_Object implements Flushable
             );
 
             // set to soft purge if configured
-            $soft_purge = Config::inst()->get('Fastly', 'soft_purge');
+            $soft_purge = Config::inst()->get(self::class, 'soft_purge');
             if ($soft_purge) {
                 $options['headers']['Fastly-Soft-Purge'] = 1;
             }
@@ -189,31 +204,31 @@ class Fastly extends SS_Object implements Flushable
 
             if (count($surrogateKeys) == 1) {
                 $requestURL = Controller::join_links(
-                    Config::inst()->get('Fastly', 'api_url'),
+                    Config::inst()->get(self::class, 'api_url'),
                     'service',
-                    Config::inst()->get('Fastly', 'service_id'),
+                    Config::inst()->get(self::class, 'service_id'),
                     $fastlyMethod,
                     $surrogateKeys[0]
                 );
             } else {
                 $requestURL = Controller::join_links(
-                    Config::inst()->get('Fastly', 'api_url'),
+                    Config::inst()->get(self::class, 'api_url'),
                     'service',
-                    Config::inst()->get('Fastly', 'service_id'),
+                    Config::inst()->get(self::class, 'service_id'),
                     $fastlyMethod
                 );
                 $options['json'] = ['surrogate_keys' => array_values($surrogateKeys)];
             }
 
             // set to soft purge if configured
-            $soft_purge = Config::inst()->get('Fastly', 'soft_purge');
+            $soft_purge = Config::inst()->get(self::class, 'soft_purge');
             if ($soft_purge) {
                 $options['headers']['Fastly-Soft-Purge'] = 1;
             }
         }
 
         // enable debug log
-        $debug_log = Config::inst()->get('Fastly', 'debug_log');
+        $debug_log = Config::inst()->get(self::class, 'debug_log');
         if ($debug_log && strlen($debug_log) > 0) {
             $options['debug'] = fopen($debug_log, "w+");
         }
@@ -231,23 +246,23 @@ class Fastly extends SS_Object implements Flushable
 
     protected static function checkConfig()
     {
-        $missing = array();
+        $missing = [];
         // check config
-        $api_url = Config::inst()->get('Fastly', 'api_url');
+        $api_url = Config::inst()->get(self::class, 'api_url');
         if (!isset($api_url) || strlen($api_url) < 1) {
             $missing[] = 'Fastly.api_url';
         }
-        $service_id = Config::inst()->get('Fastly', 'service_id');
+        $service_id = Config::inst()->get(self::class, 'service_id');
         if (!isset($service_id) || strlen($service_id) < 1) {
             $missing[] = 'Fastly.service_id';
         }
-        $api_token = Config::inst()->get('Fastly', 'api_token');
+        $api_token = Config::inst()->get(self::class, 'api_token');
         if (!isset($api_token) || (!is_array($api_token) && strlen((string) $api_token) < 1)) {
             $missing[] = 'Fastly.api_token';
         }
         if (count($missing) > 0) {
 			if (!Director::isDev()) {
-				SS_Log::log('Fastly:: config parameters missing: ' . implode(', ', $missing), SS_Log::WARN);
+			    user_error('Fastly:: config parameters missing: ' . implode(', ', $missing), E_USER_WARNING);
 			}
             return false;
         }

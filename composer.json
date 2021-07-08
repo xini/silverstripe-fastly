@@ -1,7 +1,7 @@
 {
 	"name": "innoweb/silverstripe-fastly",
 	"description": "Integration of the Fastly CDN for Silverstripe CMS",
-	"type": "silverstripe-module",
+	"type": "silverstripe-vendormodule",
 	"license": "BSD-3-Clause",
 	"keywords": ["silverstripe", "caching", "cdn", "fastly"],
 	"homepage": "https://github.com/xini/silverstripe-fastly",
@@ -12,12 +12,14 @@
 		"name": "Florian Thoma",
 		"homepage": "https://www.innoweb.com.au"
 	}],
-	"require":
-	{
-		"silverstripe/cms": "^3.7",
+	"require": {
+		"silverstripe/cms": "^4.4",
+		"silverstripe/vendor-plugin": "^1",
 		"guzzlehttp/guzzle": "~6.0"
 	},
-	"extra": {
-		"installer-name": "fastly"
+	"autoload": {
+		"psr-4": {
+			"Innoweb\\Fastly\\": "src/"
+		}
 	}
 }

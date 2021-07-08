@@ -1,6 +1,12 @@
 <?php
 
-class FastlySiteTreeExtension extends SiteTreeExtension
+namespace Innoweb\Fastly\Extensions;
+
+use Innoweb\Fastly\Fastly;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\CMS\Model\SiteTreeExtension as SSSiteTreeExtension;
+
+class SiteTreeExtension extends SSSiteTreeExtension
 {
     public function onAfterPublish(&$original)
     {
@@ -12,7 +18,8 @@ class FastlySiteTreeExtension extends SiteTreeExtension
         ) {
             $strategy = Fastly::SITETREE_STRATEGY_ALL;
         } else if (
-            $this->owner->getParent()
+            ($parent = $this->owner->getParent())
+            && is_a($parent, SiteTree::class)
         ) {
             $strategy = Fastly::SITETREE_STRATEGY_PARENTS;
         }
@@ -29,7 +36,7 @@ class FastlySiteTreeExtension extends SiteTreeExtension
     {
         $keys = [$this->owner->getPageSurrogateKey()];
         $parent = $this->owner->getParent();
-        while ($parent && is_a($parent, 'SiteTree')) {
+        while ($parent && is_a($parent, SiteTree::class)) {
             $keys[] = $parent->getPageSurrogateKey();
             $parent = $parent->getParent();
         }

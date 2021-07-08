@@ -1,6 +1,11 @@
 <?php
 
-class FastlyContentControllerExtension extends Extension
+namespace Innoweb\Fastly\Extensions;
+
+use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
+use SilverStripe\Core\Extension;
+
+class ContentControllerExtension extends Extension
 {
     public function onBeforeInit()
     {
@@ -18,9 +23,9 @@ class FastlyContentControllerExtension extends Extension
 
     public function updateCacheControl()
     {
-        HTTPCacheControl::singleton()->publicCache();
-        HTTPCacheControl::singleton()->setMaxAge(600);
-        HTTPCacheControl::singleton()->setSharedMaxAge(3600);
+        HTTPCacheControlMiddleware::singleton()->publicCache();
+        HTTPCacheControlMiddleware::singleton()->setMaxAge(600); // 10 minutes
+        HTTPCacheControlMiddleware::singleton()->setSharedMaxAge(3600); // 1 hour
     }
 
     public function updateVaryHeader()

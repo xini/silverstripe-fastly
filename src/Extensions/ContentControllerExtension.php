@@ -14,8 +14,10 @@ class ContentControllerExtension extends Extension
 
         // add surrogate keys for all parent pages to be used in tree purging
         $page = $this->owner->data();
-        $response = $this->owner->getResponse();
-        $response->addHeader('Surrogate-Key', $page->getPageSurrogateKeys());
+        if ($page->hasMethod('getPageSurrogateKeys')) {
+            $response = $this->owner->getResponse();
+            $response->addHeader('Surrogate-Key', $page->getPageSurrogateKeys());
+        }
 
         // update vary header
         $this->owner->invokeWithExtensions('updateVaryHeader');

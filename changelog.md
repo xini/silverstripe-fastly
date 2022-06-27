@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0]
+
+* update composer.json for SS 4.11 and guzzle 7
+
 ## [2.0.0]
 
 * upgrade to Silverstripe 4

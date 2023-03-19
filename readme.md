@@ -9,8 +9,10 @@ Adds [Fastly CDN](https://www.fastly.com/) integration to a Silverstripe Site.
 
 ## Requirements
 
-* Silverstripe CMS ^4.4
-* Guzzle 6
+* Silverstripe CMS 5.x
+* Guzzle 7
+
+Note: this version is compatible with Silverstripe 5. For Silverstripe 4, please see the [2 release line](https://github.com/xini/silverstripe-fastly/tree/2).
 
 ## Installation
 
@@ -48,7 +50,7 @@ Additionally, the following configuration options are available on the `Fastly` 
 
 #### Image surrogate keys
 
-Because in Silverstripe 4 we still have no way of getting all image variants (see [https://github.com/silverstripe/silverstripe-assets/issues/109](https://github.com/silverstripe/silverstripe-assets/issues/109)), we need to mark all images  and image variants with a Surrogate Key in order to purge them.
+Because in Silverstripe 4 and 5 we still have no way of getting all image variants (see [https://github.com/silverstripe/silverstripe-assets/issues/109](https://github.com/silverstripe/silverstripe-assets/issues/109)), we need to mark all images  and image variants with a Surrogate Key in order to purge them.
 
 Because the filename of all image variants in SS 4.4+ have the variant hash to the original filename, e.g. `my-file__FitWzYwLDYwXQ.jpg`, we can extract the file name without hash and add it as a surrogate key header. The module then purges the original URL of the file as well as the Surrogate Key to clear the original image as well as all variants. (This might purge other images if there are multiple images with the same name in different folders, but I think we can live with that.)
 

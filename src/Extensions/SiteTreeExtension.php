@@ -12,9 +12,10 @@ class SiteTreeExtension extends SSSiteTreeExtension
     {
         $strategy = Fastly::SITETREE_STRATEGY_SINGLE;
         if (
-            $this->owner->URLSegment != $original->URLSegment || // the slug has been altered
-            $this->owner->MenuTitle != $original->MenuTitle || // the navigation label has been altered
-            $this->owner->Title != $original->Title // the title has been altered
+            !$original
+            || $this->owner->URLSegment != $original->URLSegment // the slug has been altered
+            || $this->owner->MenuTitle != $original->MenuTitle // the navigation label has been altered
+            || $this->owner->Title != $original->Title // the title has been altered
         ) {
             $strategy = Fastly::SITETREE_STRATEGY_ALL;
         } else if (
@@ -25,6 +26,11 @@ class SiteTreeExtension extends SSSiteTreeExtension
         }
 
         Fastly::flushSiteTree($this->owner->ID, $strategy);
+    }
+
+    public function onAfterPublishRecursive(&$original)
+    {
+        $this->getOwner()->onAfterPublish($original);
     }
 
     public function onAfterUnpublish()

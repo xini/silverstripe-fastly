@@ -202,11 +202,13 @@ To serve different content based on the user's location add the following VCL sn
 
 ```
 # sub routine: recv(vcl_recv)
-set req.http.client-geo-country = client.geo.country_code;
-set req.http.client-geo-continent = client.geo.continent_code;
-set req.http.client-geo-city = client.geo.city
-set req.http.client-geo-longitude = client.geo.longitude
-set req.http.client-geo-latitude = client.geo.latitude
+if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
+	set req.http.client-geo-country = client.geo.country_code;
+	set req.http.client-geo-continent = client.geo.continent_code;
+	set req.http.client-geo-city = client.geo.city
+	set req.http.client-geo-longitude = client.geo.longitude
+	set req.http.client-geo-latitude = client.geo.latitude
+}
 ```
 You can choose any or all of the lines above to add to your config, depending on what you need. 
 

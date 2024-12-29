@@ -76,8 +76,18 @@ For Apache, add the following snippet to your `.htaccess` file to add the surrog
 *title*: not admin, logged in or form
 
 ```
-!(req.url ~ "^/(Security|admin|dev)") && !(req.http.Cookie ~ "sslogin=") && !(beresp.http.Cache-Control ~ "no-cache") && !(req.url ~ "stage=Stage")
+!(req.url ~ "^/(Security|admin|dev)") && !(req.http.Cookie ~ "sslogin=") && !(beresp.http.Cache-Control ~ "no-cache") && !(req.url ~ "stage=Stage") && !(req.url ~ "/ping$")
 ```
+
+*type*: cache
+
+*title*: admin, logged in or form
+
+```
+(req.url ~ "^/(Security|admin|dev)") || (req.http.cookie ~ "sslogin=") || (beresp.http.cache-control ~ "no-cache") || (req.url ~ "stage=Stage") || (req.url ~ "/ping$")
+```
+
+
 
 *type*: request
 
@@ -116,6 +126,10 @@ source: 86400s
 *title*: clean up requests
 
 ```
+# save requested range to cache streaming blocks
+if (req.http.Range ~ "bytes=") {
+  set req.http.x-range = req.http.Range;
+}
 # remove cookies for static content
 if (req.http.Cookie && req.url ~ "^[^?]*\.(?:js|css|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|pdf|woff|woff2|eot|ttf|otf|svg)(\?.*)?$") {
 		unset req.http.cookie;
@@ -136,6 +150,9 @@ if (req.http.Cookie) {
 	
 	# Remove the StatCounter cookies
 	set req.http.Cookie = regsuball(req.http.Cookie, "(^|;\s*)(sc_is_visitor_unique)=[^;]*", "");
+	
+	# Remove Kickfire cookie 
+	set req.http.Cookie = regsuball(req.http.Cookie, "(^|;\s*)(kickfire_api_session_cookie)=[^;]*", "");
 
 	# Remove a ";" prefix, if present.
 	set req.http.Cookie = regsub(req.http.Cookie, "^;\s*", "");
@@ -188,9 +205,10 @@ if (
 	(req.http.Cookie) &&
 	!(req.url ~ "^/(Security|admin|dev)") &&
 	!(req.url ~ "stage=") &&
+	!(req.url ~ "/ping$") &&
 	!(req.method == "POST") &&
 	!(req.http.Cookie ~ "sslogin=") &&
-	!(resp.http.Chache-Control ~ "no-store")
+	!(resp.http.Cache-Control ~ "no-store")
 ) {
 	set resp.http.set-cookie = "PHPSESSID=deleted; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly";
 }
@@ -203,11 +221,25 @@ To serve different content based on the user's location add the following VCL sn
 
 ```
 # sub routine: recv(vcl_recv)
-set req.http.client-geo-country = client.geo.country_code;
-set req.http.client-geo-continent = client.geo.continent_code;
-set req.http.client-geo-city = client.geo.city
-set req.http.client-geo-longitude = client.geo.longitude
-set req.http.client-geo-latitude = client.geo.latitude
+if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
+  if (req.url ~ "(\?|\&)country=") {
+  	# extract country parameter 
+  	set req.http.X-Country-Code = regsub(req.url, "^.*(\?|\&)country=([^&]*).*$" , "\2");
+  	set req.http.client-geo-country = regsub(req.url, "^.*(\?|\&)country=([^&]*).*$" , "\2");
+  	# strip country parameter from backend request
+  	set req.url = regsuball(req.url,"\?country=[^&]+$","");
+  } else if (client.geo.country_code) {
+  	set req.http.X-Country-Code = client.geo.country_code;
+  	set req.http.client-geo-country = client.geo.country_code;
+  }
+  
+  set req.http.client-geo-latitude = client.geo.latitude;
+  set req.http.client-geo-longitude = client.geo.longitude;
+}
+if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
+  set req.http.Fastly-Client-IP = client.ip;
+}
+set req.http.X-Forwarded-For = req.http.Fastly-Client-IP;
 ```
 You can choose any or all of the lines above to add to your config, depending on what you need. 
 

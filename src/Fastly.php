@@ -3,6 +3,7 @@
 namespace Innoweb\Fastly;
 
 use GuzzleHttp\Client as GuzzleClient;
+use Psr\Log\LoggerInterface;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Model\SiteTree;
@@ -12,6 +13,7 @@ use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 
 class Fastly implements Flushable
 {
@@ -36,6 +38,7 @@ class Fastly implements Flushable
     private static $soft_purge = true;
     private static $verify_ssl = true;
     private static $debug_log = '';
+    private static $ignore_log = false;
 
     /**
      * Implementation of Flushable::flush()
@@ -160,7 +163,7 @@ class Fastly implements Flushable
 
         // check parameters
         if ($url && count($surrogateKeys) > 0) {
-            user_error('Fastly::performFlush :: only one of the parameters url OR surrogateKeys is allowed', E_USER_WARNING);
+            Injector::inst()->get(LoggerInterface::class)->error('Fastly::performFlush :: only one of the parameters url OR surrogateKeys is allowed');
         }
 
         // get request headers and options
@@ -239,7 +242,7 @@ class Fastly implements Flushable
         if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
             return true;
         } else {
-            user_error('Fastly::performFlush :: '.$response->getStatusCode().': '.$response->getBody(), E_USER_WARNING);
+            Injector::inst()->get(LoggerInterface::class)->error('Fastly::performFlush :: '.$response->getStatusCode().': '.$response->getBody());
         }
         return false;
     }
@@ -261,8 +264,8 @@ class Fastly implements Flushable
             $missing[] = 'Fastly.api_token';
         }
         if (count($missing) > 0) {
-			if (!Director::isDev()) {
-			    user_error('Fastly:: config parameters missing: ' . implode(', ', $missing), E_USER_WARNING);
+			if (!Director::isDev() && Config::inst()->get(self::class, 'ignore_log') === false) {
+                Injector::inst()->get(LoggerInterface::class)->error('Fastly:: config parameters missing: ' . implode(', ', $missing));
 			}
             return false;
         }

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.1.0]
+
+* add config parameter ignore_log to skip logging missing config parameters
+* switch to SS logging instead of throwing user_errors
+
 ## [3.0.1]
 
 * fix trigger for recursive publishing

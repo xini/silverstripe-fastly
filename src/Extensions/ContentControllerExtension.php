@@ -3,7 +3,9 @@
 namespace Innoweb\Fastly\Extensions;
 
 use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Extension;
+use SilverStripe\Security\BasicAuth;
 
 class ContentControllerExtension extends Extension
 {
@@ -25,9 +27,18 @@ class ContentControllerExtension extends Extension
 
     public function updateCacheControl()
     {
-        HTTPCacheControlMiddleware::singleton()->publicCache();
-        HTTPCacheControlMiddleware::singleton()->setMaxAge(600); // 10 minutes
-        HTTPCacheControlMiddleware::singleton()->setSharedMaxAge(3600); // 1 hour
+        if (BasicAuth::config()->get('entire_site_protected')
+            || Environment::getEnv(BasicAuth::USE_BASIC_AUTH)
+        ) {
+            HTTPCacheControlMiddleware::singleton()
+                ->privateCache()
+                ->setMaxAge(600); // 10 minutes
+        } else {
+            HTTPCacheControlMiddleware::singleton()
+                ->publicCache()
+                ->setMaxAge(600) // 10 minutes
+                ->setSharedMaxAge(3600); // 1 hour
+        }
     }
 
     public function updateVaryHeader()

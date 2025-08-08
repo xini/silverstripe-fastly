@@ -237,6 +237,11 @@ if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
   set req.http.client-geo-latitude = client.geo.latitude;
   set req.http.client-geo-longitude = client.geo.longitude;
 }
+# set correct client IP
+if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
+  set req.http.Fastly-Client-IP = client.ip;
+}
+set req.http.X-Forwarded-For = req.http.Fastly-Client-IP;
 ```
 
 You can choose any or all of the lines above to add to your config, depending on what you need. 

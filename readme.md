@@ -75,6 +75,14 @@ For Apache, add the following snippet to your `.htaccess` file to add the surrog
 
 *type*: cache
 
+*title*: admin, logged in or form
+
+```
+(req.url ~ "^/(Security|admin|dev)") || (req.http.cookie ~ "sslogin=") || (beresp.http.cache-control ~ "no-cache") || (req.url ~ "stage=Stage") || (req.url ~ "/ping$")
+```
+
+*type*: cache
+
 *title*: not admin, logged in or form
 
 ```
@@ -87,6 +95,15 @@ For Apache, add the following snippet to your `.htaccess` file to add the surrog
 
 ```
 req.url ~ "^/(Security|admin|dev)" || req.http.Cookie ~ "sslogin=" || req.url ~ "stage=Stage"
+```
+
+#### Cache settings
+
+```
+condition: admin, logged in or form
+name: pass to origin
+action: pass
+X-Forwarded-For: Append
 ```
 
 #### Request settings
@@ -109,7 +126,53 @@ destination: stale_while_revalidate
 source: 86400s
 ```
 
+```
+condition: admin, logged in or form
+name: force skip caching
+type: Cache
+action: set
+destination: cacheable
+source: false
+```
+
 #### VCL snippets
+
+*type*: recv
+
+*title*: block bots
+
+```
+# crawlers
+if (req.http.User-Agent ~ "(?i)360Spider|80legs|Abonti|Aboundex|AcoonBot|Acunetix|adbeat_bot|adidxbot|ADmantX|AngloINFO|Antelope|BeetleBot|billigerbot|binlar|BlackWidow|BLP_bbot|BoardReader|casper|CazoodleBot|CCBot|checkprivacy|ChinaClaw|chromeframe|Clerkbot|Cliqzbot|clshttp|CommonCrawler|CPython|crawler4j|Crawlera|CRAZYWEBCRAWLER|Curious|Custo|diavol|DigExt|Digincore|DIIbot|discobot|DISCo|DoCoMo|DotBot|Download\ Demon|Download.Demon|Download.Devil|Download.Wonder|DTS.Agent|EasouSpider|eCatch|ecxi|EirGrabber|Elmer|EmailCollector|EmailSiphon|EmailWolf|Exabot|ExaleadCloudView|ExpertSearchSpider|ExpertSearch|Express|Extractor|extract|EyeNetIE|Ezooms|F2S|FastSeek|FHscan|finbot|FlappyBot|FlashGet|flicky|Flipboard|g00g1e|Genieo|GetRight|GetWeb|GigablastOpenSource|GozaikBot|GrabNet|Grafula|GrapeshotCrawler|GTB5|harvest|heritrix|HMView|HomePageBot|ia_archiver|icarus6|IDBot|IlseBot|Indigonet|Indy|integromedb|InterGET|InternetSeer|Ninja|IRLbot|jakarta|Java|JennyBot|JetCar|JobdiggerSpider|Jooblebot|kanagawa|KINGSpider|kmccrew|larbin|LeechFTP|libwww|Lingewoud|linkdexbot|LinksCrawler|linkwalker|LivelapBot|ltx71|LubbersBot|masscan|maverick|Maxthon$|Mediatoolkitbot|MegaIndex|MFC_Tear_Sample|miner|Missigua|msnbot|Navroad|NearSite|NetAnts|netEstate|NetSpider|NetZIP|Vampire|NextGenSearchBot|nutch|Octopus|Openfind|OutfoxBot|Offline|OrangeBot|Owlin|Pixray|probethenet|PageGrabber|panopta|panscient|Papa|pavuk|pcBrowser|PeoplePal|Photon|planetwork|PleaseCrawl|PNAMAIN.EXE|PodcastPartyBot|prijsbest|proximic|psbot|purebot|pycurl|QuerySeekerSpider|RealDownload|ReGet|Riddler|Ripper|rogerbot|RSSingBot|RyzeCrawler|SafeSearch|SBIder|Scrapy|Screaming|SeaMonkey|SemrushBot|SentiBot|SEOkicks|SeznamBot|ShowyouBot|SightupBot|SISTRIX|siteexplorer|SiteSnagger|skygrid|Slurp|SmartDownload|Snoopy|Sogou|Sosospider|spaumbot|Steeler|stripper|sucker|SuperBot|Superfeed|SuperHTTP|SurdotlyBot|Surfbot|tAkeOut|Teleport|TinEye|Toata|Toplistbot|trendictionbot|TurnitinBot|turnit|Vagabondo|vikspider|VoidEYE|VoilaBot|WBSearchBot|webalta|WebAuto|WebBandit|WebCollage|WebCopier|WebFetch|WebGo|WebLeacher|WebReaper|WebSauger|eXtractor|Quester|WebStripper|WebWhacker|WebZIP|WeSEE|Widow|WinInet|woobot|woopingbot|worldwebheritage|Wotbox|WPScan|WWWOFFLE|Mechanize|Xaldon|XoviBot|yacybot|zermelo|Zeus|ZmEu|ZumBot|ZyBorg") {
+    error 403;
+}
+# optional: search engines (e.g Huawei, Magestic)
+#if (req.http.User-Agent ~ "(?i)PetalBot|MJ12bot") {
+#    error 403;
+#}
+# optional: AI bots
+#if (req.http.User-Agent ~ "(?i)ClaudeBot|Bytespider|GPTBot|PerplexityBot|meta-externalagent|aiohttp") {
+#    error 403;
+#}
+
+# block HEAD requests
+if (req.method == "HEAD") {
+    error 405;
+}
+
+# send wordpress and other stuff to 404
+if (req.url.path ~ "/(wp-content|wp-includes|wp-admin|.git|.svn|administrator)/") {
+    error 404;
+}
+# send sensitive files to 404
+if (req.url.path ~ "(?i)\.(log|git|bak|sql|env|ini|conf|config|md)$") {
+    error 404;
+}
+# send all php files except index to 404
+if (req.url ~ "\.php($|\?)" && req.url !~ "^/index\.php($|\?)") {
+    error 404;
+}
+```
 
 *type*: recv
 
@@ -122,7 +185,7 @@ if (req.http.Range ~ "bytes=") {
 }
 # remove cookies for static content
 if (req.http.Cookie && req.url ~ "^[^?]*\.(?:js|css|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|pdf|woff|woff2|eot|ttf|otf|svg)(\?.*)?$") {
-		unset req.http.cookie;
+	unset req.http.cookie;
 }
 # remove common cookies
 if (req.http.Cookie) {
@@ -237,11 +300,6 @@ if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
   set req.http.client-geo-latitude = client.geo.latitude;
   set req.http.client-geo-longitude = client.geo.longitude;
 }
-# set correct client IP
-if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
-  set req.http.Fastly-Client-IP = client.ip;
-}
-set req.http.X-Forwarded-For = req.http.Fastly-Client-IP;
 ```
 
 You can choose any or all of the lines above to add to your config, depending on what you need. 

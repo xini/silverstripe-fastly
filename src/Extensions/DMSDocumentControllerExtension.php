@@ -11,10 +11,10 @@ class DMSDocumentControllerExtension extends Extension
     public function onBeforeInit()
     {
         // update default page caching
-        $this->owner->invokeWithExtensions('updateCacheControl');
+        $this->getOwner()->invokeWithExtensions('updateCacheControl');
 
         // update vary header
-        $this->owner->invokeWithExtensions('updateVaryHeader');
+        $this->getOwner()->invokeWithExtensions('updateVaryHeader');
     }
 
     public function updateCacheControl()
@@ -26,8 +26,8 @@ class DMSDocumentControllerExtension extends Extension
     public function updateVaryHeader()
     {
         // add vary if geo ip request headers found
-        $request = $this->owner->getRequest();
-        $response = $this->owner->getResponse();
+        $request = $this->getOwner()->getRequest();
+        $response = $this->getOwner()->getResponse();
 
         if ($request->getHeader('client-geo-country')) {
             $response->addHeader('Vary',  $response->getHeader('Vary') . ' client-geo-country');

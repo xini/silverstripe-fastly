@@ -4,16 +4,16 @@ namespace Innoweb\Fastly\Extensions;
 
 use Innoweb\Fastly\Fastly;
 use SilverStripe\Assets\Image;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
-class FileExtension extends DataExtension
+class FileExtension extends Extension
 {
     public function onAfterWrite()
     {
-        if (is_a($this->owner, Image::class)) {
-            Fastly::flushImage($this->owner->ID);
+        if (is_a($this->getOwner(), Image::class)) {
+            Fastly::flushImage($this->getOwner()->ID);
         } else {
-            Fastly::flushFile($this->owner->ID);
+            Fastly::flushFile($this->getOwner()->ID);
         }
     }
 }

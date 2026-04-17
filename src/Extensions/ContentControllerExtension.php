@@ -12,17 +12,17 @@ class ContentControllerExtension extends Extension
     public function onBeforeInit()
     {
         // update default page caching
-        $this->owner->invokeWithExtensions('updateCacheControl');
+        $this->getOwner()->invokeWithExtensions('updateCacheControl');
 
         // add surrogate keys for all parent pages to be used in tree purging
-        $page = $this->owner->data();
+        $page = $this->getOwner()->data();
         if ($page->hasMethod('getPageSurrogateKeys')) {
-            $response = $this->owner->getResponse();
+            $response = $this->getOwner()->getResponse();
             $response->addHeader('Surrogate-Key', $page->getPageSurrogateKeys());
         }
 
         // update vary header
-        $this->owner->invokeWithExtensions('updateVaryHeader');
+        $this->getOwner()->invokeWithExtensions('updateVaryHeader');
     }
 
     public function updateCacheControl()
@@ -44,8 +44,8 @@ class ContentControllerExtension extends Extension
     public function updateVaryHeader()
     {
         // add vary if geo ip request headers found
-        $request = $this->owner->getRequest();
-        $response = $this->owner->getResponse();
+        $request = $this->getOwner()->getRequest();
+        $response = $this->getOwner()->getResponse();
 
         if ($request->getHeader('client-geo-country')) {
             $response->addHeader('Vary',  $response->getHeader('Vary') . ' client-geo-country');

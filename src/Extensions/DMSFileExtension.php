@@ -3,12 +3,12 @@
 namespace Innoweb\Fastly\Extensions;
 
 use Innoweb\Fastly\Fastly;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
-class DMSFileExtension extends DataExtension
+class DMSFileExtension extends Extension
 {
     public function onAfterWrite()
     {
-        Fastly::flushURL($this->owner->DMSDownloadLink());
+        Fastly::flushURL($this->getOwner()->DMSDownloadLink());
     }
 }

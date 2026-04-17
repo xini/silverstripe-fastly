@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.3.0]
+
+* add page publish when element is published
+* clean up extension code
+* update docs and fastly config instructions 
+
 ## [3.2.0]
 
 * set page caching to private if BasicAuth is enabled

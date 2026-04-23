@@ -141,6 +141,8 @@ source: false
 
 *title*: block bots
 
+*priority*: 5
+
 ```
 # crawlers
 if (req.http.User-Agent ~ "(?i)360Spider|80legs|Abonti|Aboundex|AcoonBot|Acunetix|adbeat_bot|adidxbot|ADmantX|AngloINFO|Antelope|BeetleBot|billigerbot|binlar|BlackWidow|BLP_bbot|BoardReader|casper|CazoodleBot|CCBot|checkprivacy|ChinaClaw|chromeframe|Clerkbot|Cliqzbot|clshttp|CommonCrawler|CPython|crawler4j|Crawlera|CRAZYWEBCRAWLER|Curious|Custo|diavol|DigExt|Digincore|DIIbot|discobot|DISCo|DoCoMo|DotBot|Download\ Demon|Download.Demon|Download.Devil|Download.Wonder|DTS.Agent|EasouSpider|eCatch|ecxi|EirGrabber|Elmer|EmailCollector|EmailSiphon|EmailWolf|Exabot|ExaleadCloudView|ExpertSearchSpider|ExpertSearch|Express|Extractor|extract|EyeNetIE|Ezooms|F2S|FastSeek|FHscan|finbot|FlappyBot|FlashGet|flicky|Flipboard|g00g1e|Genieo|GetRight|GetWeb|GigablastOpenSource|GozaikBot|GrabNet|Grafula|GrapeshotCrawler|GTB5|harvest|heritrix|HMView|HomePageBot|ia_archiver|icarus6|IDBot|IlseBot|Indigonet|Indy|integromedb|InterGET|InternetSeer|Ninja|IRLbot|jakarta|Java|JennyBot|JetCar|JobdiggerSpider|Jooblebot|kanagawa|KINGSpider|kmccrew|larbin|LeechFTP|libwww|Lingewoud|linkdexbot|LinksCrawler|linkwalker|LivelapBot|ltx71|LubbersBot|masscan|maverick|Maxthon$|Mediatoolkitbot|MegaIndex|MFC_Tear_Sample|miner|Missigua|msnbot|Navroad|NearSite|NetAnts|netEstate|NetSpider|NetZIP|Vampire|NextGenSearchBot|nutch|Octopus|Openfind|OutfoxBot|Offline|OrangeBot|Owlin|Pixray|probethenet|PageGrabber|panopta|panscient|Papa|pavuk|pcBrowser|PeoplePal|Photon|planetwork|PleaseCrawl|PNAMAIN.EXE|PodcastPartyBot|prijsbest|proximic|psbot|purebot|pycurl|QuerySeekerSpider|RealDownload|ReGet|Riddler|Ripper|rogerbot|RSSingBot|RyzeCrawler|SafeSearch|SBIder|Scrapy|Screaming|SeaMonkey|SemrushBot|SentiBot|SEOkicks|SeznamBot|ShowyouBot|SightupBot|SISTRIX|siteexplorer|SiteSnagger|skygrid|Slurp|SmartDownload|Snoopy|Sogou|Sosospider|spaumbot|Steeler|stripper|sucker|SuperBot|Superfeed|SuperHTTP|SurdotlyBot|Surfbot|tAkeOut|Teleport|TinEye|Toata|Toplistbot|trendictionbot|TurnitinBot|turnit|Vagabondo|vikspider|VoidEYE|VoilaBot|WBSearchBot|webalta|WebAuto|WebBandit|WebCollage|WebCopier|WebFetch|WebGo|WebLeacher|WebReaper|WebSauger|eXtractor|Quester|WebStripper|WebWhacker|WebZIP|WeSEE|Widow|WinInet|woobot|woopingbot|worldwebheritage|Wotbox|WPScan|WWWOFFLE|Mechanize|Xaldon|XoviBot|yacybot|zermelo|Zeus|ZmEu|ZumBot|ZyBorg") {
@@ -160,23 +162,25 @@ if (req.method == "HEAD") {
     error 405;
 }
 
-# send wordpress and other stuff to 404
-if (req.url.path ~ "/(wp-content|wp-includes|wp-admin|.git|.svn|administrator)/") {
-    error 404;
-}
-# send sensitive files to 404
-if (req.url.path ~ "(?i)\.(log|git|bak|sql|env|ini|conf|config|md)$") {
-    error 404;
-}
-# send all php files except index to 404
-if (req.url ~ "\.php($|\?)" && req.url !~ "^/index\.php($|\?)") {
-    error 404;
-}
+# optional: send wordpress and other stuff to 404
+#if (req.url.path ~ "(?i)/(wp-content|wp-includes|wp-admin|.git|.svn|administrator)/") {
+#    error 404;
+#}
+# optional: send weird files to 404
+#if (req.url.ext ~ "(?i)^(log|git|bak|sql|env|ini|conf|config|md|exe|dll|bat|cmd|asp)$") {
+#    error 404;
+#}
+# optional: send all php files 404
+#if (req.url.ext ~ "(?i)^(php)$") {
+#    error 404;
+#}
 ```
 
 *type*: recv
 
 *title*: clean up requests
+
+*priority*: 100
 
 ```
 # save requested range to cache streaming blocks
@@ -233,6 +237,8 @@ if (req.url ~ "\?$") {
 
 *title*: add client IP header
 
+*priority*: 100
+
 ```
 if (fastly.ff.visits_this_service == 0 && req.restarts == 0) {
   set req.http.Fastly-Client-IP = client.ip;
@@ -243,6 +249,8 @@ set req.http.X-Forwarded-For = req.http.Fastly-Client-IP;
 *type*: fetch
 
 *title*: remove cookie header from static content
+
+*priority*: 100
 
 ```
 if (bereq.url ~ ".*\.(?:css|js)(?=\?|&|$)") { 
@@ -262,6 +270,8 @@ if (bereq.url ~ ".*\.(?:woff|woff2|eot|ttf|otf|svg)(?=\?|&|$)") {
 *type*: deliver
 
 *title*: remove session cookie for non-form pages
+
+*priority*: 100
 
 ```
 if (

@@ -41,15 +41,9 @@ Name: fastly-elemental
 Only:
   moduleexists: 'dnadesign/silverstripe-elemental'
 ---
-SilverStripe\Assets\File:
+DNADesign\Elemental\Models\BaseElement:
   extensions:
-    - Innoweb\Fastly\Extensions\DMSFileExtension
-Innoweb\DMS\Controller\DMSDocumentController:
-  extensions:
-    - Innoweb\Fastly\Extensions\DMSDocumentControllerExtension
-Innoweb\DMS\Controller\LegacyDMSDocumentController:
-  extensions:
-    - Innoweb\Fastly\Extensions\DMSDocumentControllerExtension
+    - Innoweb\Fastly\Extensions\BaseElementExtension
 
 ---
 Name: fastly-dms

@@ -180,7 +180,7 @@ if (req.method == "HEAD") {
 
 *title*: clean up requests
 
-*priority*: 100
+*priority*: 50
 
 ```
 # save requested range to cache streaming blocks
@@ -188,7 +188,7 @@ if (req.http.Range ~ "bytes=") {
   set req.http.x-range = req.http.Range;
 }
 # remove cookies for static content
-if (req.http.Cookie && req.url ~ "^[^?]*\.(?:js|css|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|pdf|woff|woff2|eot|ttf|otf|svg)(\?.*)?$") {
+if (req.http.Cookie && req.url ~ "^[^?]*\.(?:js|css|avif|webp|bmp|png|gif|jpg|jpeg|ico|pcx|tif|tiff|au|mid|midi|mpa|mp3|ogg|m4a|ra|wma|wav|cda|avi|mpg|mpeg|asf|wmv|m4v|mov|mkv|mp4|ogv|webm|swf|flv|ram|rm|doc|docx|txt|rtf|xls|xlsx|pages|ppt|pptx|pps|csv|cab|arj|tar|zip|zipx|sit|sitx|gz|tgz|bz2|ace|arc|pkg|dmg|hqx|jar|pdf|woff|woff2|eot|ttf|otf|svg)(\?.*)?$") {
 	unset req.http.cookie;
 }
 # remove common cookies
@@ -219,14 +219,22 @@ if (req.http.Cookie) {
 		unset req.http.cookie;
 	}
 }
-# remove adwords gclid parameter
-set req.url = regsuball(req.url,"\?gclid=[^&]+$",""); # strips when QS = "?gclid=AAA"
-set req.url = regsuball(req.url,"\?gclid=[^&]+&","?"); # strips when QS = "?gclid=AAA&foo=bar"
-set req.url = regsuball(req.url,"&gclid=[^&]+",""); # strips when QS = "?foo=bar&gclid=AAA" or QS = "?foo=bar&gclid=AAA&bar=baz"
+
+# remove tracking parameters
+set req.url = querystring.filter(req.url, "dpuid");
+set req.url = querystring.filter(req.url, "ttclid");
+set req.url = querystring.filter(req.url, "fbclid");
+set req.url = querystring.filter(req.url, "gclid");
+set req.url = querystring.filter(req.url, "gbraid");
+set req.url = querystring.filter(req.url, "wbraid");
+set req.url = querystring.globfilter(req.url, "utm_*");
+set req.url = querystring.globfilter(req.url, "gad_*");
+
 # strip hash, server doesn't need it
 if (req.url ~ "\#") {
 	set req.url = regsub(req.url, "\#.*$", "");
 }
+
 # Strip a trailing questionsmark if it exists
 if (req.url ~ "\?$") {
 	set req.url = regsub(req.url, "\?$", "");
